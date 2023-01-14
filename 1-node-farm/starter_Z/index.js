@@ -1,4 +1,3 @@
-const { data } = require("autoprefixer");
 const fs = require("fs");
 const http = require("http");
 const url = require("url");
@@ -28,12 +27,18 @@ console.log("Will read file");
 */
 ////////////////SERVER////////////////
 
+const data = fs.readFileSync(`${__dirname}/dev-data/data.json`, "utf-8");
+const dataObj = JSON.parse(data);
+
 const server = http.createServer((req, res) => {
   console.log(req.url);
 
   const pathName = req.url;
   if (pathName === "/" || pathName === "/overview") {
     res.end("This is the OVERVIEW");
+  } else if (pathName === "/api") {
+    res.writeHead(200, { "Content.type": "application/json" });
+    res.end(data);
   } else if (pathName === "/product") {
     res.end("This is the PRODUCT");
   } else {
