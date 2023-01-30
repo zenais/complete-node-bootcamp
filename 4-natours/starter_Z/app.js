@@ -4,20 +4,6 @@ const app = express();
 
 app.use(express.json());
 
-/* 
-// root url
-app.get('/', (req, res) => {
-  res
-    .status(200)
-    .json({ message: 'Hello from the server side', app: 'natours' });
-});
-
-app.post('/', (req, res) => {
-  res.status(200);
-  res.send('You cam post on this URL');
-});
- */
-
 const tours = JSON.parse(
   fs.readFileSync(`${__dirname}/dev-data/data/tours-simple.json`, 'utf8')
 );
@@ -69,7 +55,35 @@ app.post('/api/v1/tours', (req, res) => {
   );
 });
 
-app.patch('/api/v1/tours/:id', (req, res) => {});
+app.patch('/api/v1/tours/:id', (req, res) => {
+  if (~~req.params.id > tours.length) {
+    return res.status(404).json({
+      status: 'fail',
+      message: 'Invalid ID',
+    });
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      tour: '<Update tour here>',
+    },
+  });
+});
+
+app.delete('/api/v1/tours/:id', (req, res) => {
+  if (~~req.params.id > tours.length) {
+    return res.status(404).json({
+      status: 'fail',
+      message: 'Invalid ID',
+    });
+  }
+
+  res.status(204).json({
+    status: 'success',
+    data: null,
+  });
+});
 
 const port = 3000;
 app.listen(port, () => {
