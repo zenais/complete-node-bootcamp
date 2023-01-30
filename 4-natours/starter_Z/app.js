@@ -19,7 +19,7 @@ app.post('/', (req, res) => {
  */
 
 const tours = JSON.parse(
-  fs.readFileSync(`${__dirname}/dev-data/data/tours.json`, 'utf8')
+  fs.readFileSync(`${__dirname}/dev-data/data/tours-simple.json`, 'utf8')
 );
 
 app.get('/api/v1/tours', (req, res) => {
@@ -28,6 +28,24 @@ app.get('/api/v1/tours', (req, res) => {
     results: tours.length,
     data: {
       tours: tours,
+    },
+  });
+});
+
+app.get('/api/v1/tours/:id', (req, res) => {
+  const id = ~~req.params.id;
+  const requestedTour = tours.find((e) => e.id === id);
+  if (!requestedTour) {
+    return res.status(404).json({
+      status: 'fail',
+      message: 'Invalid ID',
+    });
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      requestedTour,
     },
   });
 });
@@ -50,6 +68,8 @@ app.post('/api/v1/tours', (req, res) => {
     }
   );
 });
+
+app.patch('/api/v1/tours/:id', (req, res) => {});
 
 const port = 3000;
 app.listen(port, () => {
