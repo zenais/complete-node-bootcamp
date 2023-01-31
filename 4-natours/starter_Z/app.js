@@ -1,24 +1,39 @@
 const fs = require('fs');
 const express = require('express');
 const app = express();
+const morgan = require('morgan');
+
+// 1) MIDDLEWARES
+app.use(morgan('dev'));
 
 app.use(express.json());
+app.use((req, res, next) => {
+  console.log('Hello from the middleware');
+  next();
+});
 
+app.use((req, res, next) => {
+  req.requestTime = new Date().toISOString();
+  next();
+});
+
+// 2. ROUTE HANDLERS
 const tours = JSON.parse(
   fs.readFileSync(`${__dirname}/dev-data/data/tours-simple.json`, 'utf8')
 );
 
-app.get('/api/v1/tours', (req, res) => {
+function getAllTours(req, res) {
   res.status(200).json({
     status: 'success',
+    requestedAt: req.requestTime,
     results: tours.length,
     data: {
       tours: tours,
     },
   });
-});
+}
 
-app.get('/api/v1/tours/:id', (req, res) => {
+function searchTourById(req, res) {
   const id = ~~req.params.id;
   const requestedTour = tours.find((e) => e.id === id);
   if (!requestedTour) {
@@ -34,9 +49,9 @@ app.get('/api/v1/tours/:id', (req, res) => {
       requestedTour,
     },
   });
-});
+}
 
-app.post('/api/v1/tours', (req, res) => {
+function addNewTour(req, res) {
   const newId = tours[tours.length - 1].id + 1;
   const newTour = Object.assign({ id: newId }, req.body);
 
@@ -53,9 +68,9 @@ app.post('/api/v1/tours', (req, res) => {
       });
     }
   );
-});
+}
 
-app.patch('/api/v1/tours/:id', (req, res) => {
+function updateTourById(req, res) {
   if (~~req.params.id > tours.length) {
     return res.status(404).json({
       status: 'fail',
@@ -69,9 +84,9 @@ app.patch('/api/v1/tours/:id', (req, res) => {
       tour: '<Update tour here>',
     },
   });
-});
+}
 
-app.delete('/api/v1/tours/:id', (req, res) => {
+function deleteTourById(req, res) {
   if (~~req.params.id > tours.length) {
     return res.status(404).json({
       status: 'fail',
@@ -83,8 +98,25 @@ app.delete('/api/v1/tours/:id', (req, res) => {
     status: 'success',
     data: null,
   });
-});
+}
+/* 
+app.get('/api/v1/tours', getAllTours);
+app.get('/api/v1/tours/:id', searchTourById);
+app.post('/api/v1/tours', addNewTour);
+app.patch('/api/v1/tours/:id', updateTourById);
+app.delete('/api/v1/tours/:id', deleteTourById);
+ */
 
+// 3.) ROUTES
+app.route('/api/v1/tours').get(getAllTours).post(addNewTour);
+
+app
+  .route('/api/v1/tours/:id')
+  .get(searchTourById)
+  .patch(updateTourById)
+  .delete(deleteTourById);
+
+// 4.) START SERVER
 const port = 3000;
 app.listen(port, () => {
   console.log(`app running on port ${port}...`);
